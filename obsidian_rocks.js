@@ -32,6 +32,21 @@ function queenStep (o) {
 
 function report_queen_position(o) {
   o.mothership.queen_position = o.me.pos;
+  o.mothership.queen_guard_positions = get_queen_guard_positions(o);
+}
+
+function get_queen_guard_positions(o) {
+  guard_position_origin = o.mothership.queen_position;
+  number_of_guard_positions = o.ships.length;
+  guard_positions = new Array();
+  degree_position_interval = 360/number_of_guard_positions;
+  for (i=0; i < number_of_guard_positions; i++) {
+    degree_to_position = i*degree_position_interval;
+    x = guard_position_origin[0] + Math.cos(degree_to_position) + 1;
+    y = guard_position_origin[1] + Math.sin(degree_to_position) + 1;
+    guard_positions[i] = new Array(x, y);
+  }
+  return guard_positions;
 }
 
 function get_threats (o) {
@@ -140,17 +155,18 @@ function get_board_exit_pos(o) {
 }
 
 function droneStep(o) {
-  var md, spd, thrust, torque;
+  return maintain_position_in_relation_to_queen(o);
+}
+
+function maintain_position_in_relation_to_queen(o) {
   torque = 0;
   thrust = 0;
-  spd = speed_to_nearest_moon(o);
-  md = dist_to_nearest_moon(o);
-  if ((spd > 0.1) && (md < 0.8 * o.game.moon_field)) {
-    thrust = 1.0;
-  }
-  if (o.me.queen) {
-      thrust = 0;
-  }
+  guard_index = o.me.ship_id;
+  guard_position = o.mothership.queen_guard_positions[guard_index];
+
+  _ref = o.lib.targeting.simpleTarget(o.me, guard_position);
+  torque = _ref.torque;
+  thrust = .33;
   return {
     torque: torque,
     thrust: thrust
