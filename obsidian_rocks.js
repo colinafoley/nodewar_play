@@ -162,7 +162,9 @@ function maintain_position_in_relation_to_queen(o) {
   torque = 0;
   thrust = 0;
   guard_index = o.me.ship_id;
-  guard_position = o.mothership.queen_guard_positions[guard_index];
+  guard_positions = o.mothership.queen_guard_positions
+  guard_positions = ( typeof guard_positions != 'undefined' && guard_positions instanceof Array ) ? guard_positions : []
+  guard_position = guard_positions[guard_index - 1]
 
   _ref = o.lib.targeting.simpleTarget(o.me, guard_position);
   torque = _ref.torque;
