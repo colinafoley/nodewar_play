@@ -6,6 +6,7 @@
 ai.step = (o) ->
   if o.me.queen then queenStep o else droneStep o
 
+my_start_pos = null
 speed_change_fear = 50
 threat_thresh = 0.5
 
@@ -22,7 +23,8 @@ queenStep = (o) ->
   return {torque, thrust, label}
 
 get_threats = (o) ->
-  unless my_start_pos then my_start_pos = o.me.pos
+  if my_start_pos is null
+    my_start_pos = o.me.pos
 
   _ref1 = o.lib.vec.toPolar(o.me.pos)
   radius = _ref1[0]
