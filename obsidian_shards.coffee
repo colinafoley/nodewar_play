@@ -99,8 +99,7 @@ threat_factor = (t) ->
 
   switch t.type
     when "moon" then res *= 6
-    when "friendly ship" then res *= 2
-    when "start position" then res *= 2
+    when "friendly ship", "start position" then res *= 2
     when "edge" then res *= 5
 
   return res
