@@ -67,7 +67,7 @@ get_threats = (o) ->
 
   threats.map (threat) ->
     threat.rel_vel = o.lib.vec.diff(o.me.vel, threat.vel)
-    threat.speed_toward = o.lib.physics.speedToward threat.rel_vel, o.me.pos, threat.pos + speed_change_fear
+    threat.speed_toward = o.lib.physics.speedToward(threat.rel_vel, o.me.pos, threat.pos) + speed_change_fear
     threat.time_threat = if threat.speed_toward > 0 then threat.dist / threat.speed_toward else Infinity
     threat.dir = o.lib.targeting.dir o.me, threat.pos
     threat.threat_factor = threat_factor threat
