@@ -161,7 +161,7 @@ maintain_position_in_relation_to_queen = (o) ->
   torque = thrust = 0
   guard_index = o.me.ship_id
   guard_position = o.mothership.queen_guard_positions[guard_index]
-  guard_position = if guard_position is not 'undefined' then guard_position else o.me.pos
+  guard_position = o.me.pos unless guard_position?
 
   _ref = o.lib.targeting.simpleTarget(o.me, guard_position)
   torque = _ref.torque
