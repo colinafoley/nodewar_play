@@ -70,7 +70,7 @@ get_threats = (o) ->
     threat.speed_toward = o.lib.physics.speedToward(threat.rel_vel, o.me.pos, threat.pos) + speed_change_fear
     threat.time_threat = if threat.speed_toward > 0 then threat.dist / threat.speed_toward else Infinity
     threat.dir = o.lib.targeting.dir o.me, threat.pos
-    threat.threat_factor = threat_factor threat
+    threat.threat_factor = if o.me.queen then threat_factor threat else drone_threat_factor threat
     return threat
 
   threats.sort (a, b) ->
@@ -101,6 +101,18 @@ threat_factor = (t) ->
 
   switch t.type
     when "moon" then res *= 6
+    when "friendly ship" then res = 1 #ignore friendlies
+    when "start position" then res *= 2
+    when "edge" then res *= 5
+
+  return res
+
+drone_threat_factor = (t) ->
+  res = 1/t.time_threat
+  res *= res
+
+  switch t.type
+    when "moon" then res *= 12 #moons are extra scary
     when "friendly ship", "start position" then res *= 2
     when "edge" then res *= 5
 
@@ -165,6 +177,20 @@ maintain_position_in_relation_to_queen = (o) ->
 
   _ref = o.lib.targeting.simpleTarget(o.me, guard_position)
   torque = _ref.torque
-  thrust = .33
+  return_to_position_factor = position_factor o, guard_position
+  thrust = Math.pow(return_to_position_factor, 0.1) - 0.95
+  label = thrust
 
-  return {torque, thrust}
+  threats = get_threats o
+  if threats[0].threat_factor > 24
+    new_target  = find_ideal_position(o, threats)
+    _ref        = o.lib.targeting.simpleTarget(o.me, new_target)
+    torque      = _ref.torque
+    thrust      = Math.pow(threats[0].threat_factor, 0.1) - 0.95
+    label = ~~threats[0].threat_factor
+
+
+  return {torque, thrust, label}
+
+position_factor = (o, guard_position) ->
+  return o.lib.vec.dist o.me.pos, guard_position
