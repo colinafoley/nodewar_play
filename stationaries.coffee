@@ -28,7 +28,7 @@ getClosestMoonThreat = (o) ->
     speed = o.lib.physics.speedToward(o.lib.vec.sum(o.me.vel, moon.vel), o.me.pos, moon.pos)
     if speed < 0
       continue
-    dist = moon.dist / speed
+    dist = Math.min(moon.dist / 2, moon.dist / speed)
     if dist < minMoonDist
       minMoon = moon
       minMoonDist = dist
@@ -45,11 +45,11 @@ stepOther = (o) ->
   if o.game.moon_field - r < 30
     return smartMove(o, [0, 0])
   moonThreat = getClosestMoonThreat(o)
-  if moonThreat.minMoonDist < 1
-    return smartMove(o, o.lib.vec.diff(o.me.pos, o.lib.vec.diff(moonThreat.minMoon.pos, o.me.pos)))
+  if moonThreat.minMoonDist < 2
+    return o.lib.targeting.simpleTarget(o.me, o.lib.vec.diff(o.me.pos, o.lib.vec.diff(moonThreat.minMoon.pos, o.me.pos)))
   queen = findEnemyQueen(o)
   myVel = o.lib.vec.diff(queen.pos, o.me.pos)
-  myVel = o.lib.vec.times(o.lib.vec.normalized(myVel), 100 + 1000 / queen.dist)
+  myVel = o.lib.vec.times(o.lib.vec.normalized(myVel), (100 + 1000 / queen.dist) / (2 * o.me.area_frac))
   moveVelocity(o, o.me, myVel)
 
 findEnemyQueen = (o) ->
