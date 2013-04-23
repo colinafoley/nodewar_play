@@ -175,11 +175,7 @@ maintain_position_in_relation_to_queen = (o) ->
   guard_position = o.mothership.queen_guard_positions[guard_index]
   guard_position = o.me.pos unless guard_position?
 
-  _ref = o.lib.targeting.simpleTarget(o.me, guard_position)
-  torque = _ref.torque
-  return_to_position_factor = position_factor o, guard_position
-  thrust = Math.pow(return_to_position_factor, 0.1) - 0.95
-  label = thrust
+  return smart_move(o, guard_position)
 
   threats = get_threats o
   if threats[0].threat_factor > 24
@@ -194,3 +190,15 @@ maintain_position_in_relation_to_queen = (o) ->
 
 position_factor = (o, guard_position) ->
   return o.lib.vec.dist o.me.pos, guard_position
+
+smart_move = (o, p) ->
+  myPos = o.me.pos
+  deltaPos = o.lib.vec.diff(p, myPos)
+  vel = deltaPos
+  move_velocity(o, o.me, vel)
+
+move_velocity = (o, me, vel) ->
+  myVel = me.vel
+  deltaVel = o.lib.vec.diff(vel, myVel)
+  aimPos = o.lib.vec.sum(deltaVel, me.pos)
+  o.lib.targeting.simpleTarget(me, aimPos)
