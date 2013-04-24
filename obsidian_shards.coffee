@@ -3,14 +3,17 @@
 #                          @colinafoley
 # -----------------------------------------------------------------------------
 
+my_start_pos      = null
+speed_change_fear = 50
+threat_thresh     = 0.5
+ship_key          = ""
+ship_key          += "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".charAt(Math.floor(Math.random() * "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".length)) for i in [0..5]
+
 ai.step = (o) ->
   if o.me.queen then queenStep o else droneStep o
 
-my_start_pos = null
-speed_change_fear = 50
-threat_thresh = 0.5
-
 queenStep = (o) ->
+  o.mothership.fleet = [] unless o.mothership.fleet?
   report_queen_position o
 
   threats = get_threats o
@@ -112,7 +115,7 @@ drone_threat_factor = (t) ->
   res *= res
 
   switch t.type
-    when "moon" then res *= 12 #moons are extra scary
+    when "moon" then res *= 18 #moons are extra scary
     when "friendly ship", "start position" then res *= 2
     when "edge" then res *= 5
 
@@ -145,37 +148,31 @@ report_queen_position = (o) ->
 
 get_queen_guard_positions = (o) ->
   guard_position_origin = o.mothership.queen_position
-  number_of_guard_positions = get_number_of_guard_positions o.ships
+  number_of_guard_positions = o.mothership.fleet.length
   degree_position_interval = 360/number_of_guard_positions
 
-  guard_positions = []
+  guard_positions = {}
   for i in [0..number_of_guard_positions]
     degree_to_position = i*degree_position_interval
     x = guard_position_origin[0] + Math.cos(degree_to_position) + 50
     y = guard_position_origin[1] + Math.sin(degree_to_position) + 50
-    guard_positions[i] = [x, y]
+    index = o.mothership.fleet[i]
+    guard_positions[index] = [x, y]
 
   return guard_positions
 
-get_number_of_guard_positions = (ships) ->
-  count = 0
-
-  for ship in ships
-    if ship.friendly then count++
-
-  return count
-
-
 droneStep = (o) ->
+  report_in o
   return maintain_position_in_relation_to_queen o
+
+report_in = (o) ->
+  if o.mothership.fleet.indexOf(ship_key) is -1 then o.mothership.fleet.push ship_key
 
 maintain_position_in_relation_to_queen = (o) ->
   torque = thrust = 0
-  guard_index = o.me.ship_id
+  guard_index = ship_key
   guard_position = o.mothership.queen_guard_positions[guard_index]
   guard_position = o.me.pos unless guard_position?
-
-  return smart_move(o, guard_position)
 
   threats = get_threats o
   if threats[0].threat_factor > 24
@@ -184,9 +181,10 @@ maintain_position_in_relation_to_queen = (o) ->
     torque      = _ref.torque
     thrust      = Math.pow(threats[0].threat_factor, 0.1) - 0.95
     label = ~~threats[0].threat_factor
+    return {torque, thrust, label}
 
 
-  return {torque, thrust, label}
+  return smart_move(o, guard_position)
 
 position_factor = (o, guard_position) ->
   return o.lib.vec.dist o.me.pos, guard_position
